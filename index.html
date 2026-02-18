@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NPS Future Forge — Shape Your Retirement</title>
+  <meta name="description" content="An interactive life-simulation game that shows the real impact of NPS contributions on your future lifestyle.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="stage-early">
+
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════════════
+       SKYBOX BAR — Freedom Day Countdown
+  ═══════════════════════════════════════════════════════ -->
+  <header id="skybox-bar">
+    <div class="skybox-brand">⚡ NPS FUTURE FORGE</div>
+
+    <div class="skybox-center">
+      <div class="freedom-label">☀️ Freedom Day Countdown</div>
+      <div class="freedom-countdown"><span id="freedom-days">10,950</span> days</div>
+      <div class="freedom-progress-bar">
+        <div id="freedom-progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="skybox-right">
+      <div class="streak-badge">🔥 Streak: <strong id="streak-count">0</strong></div>
+      <div class="token-badge" onclick="useProtectionToken()" title="Use Protection Token to maintain streak">
+        🛡️ Tokens: <strong id="token-count">2</strong>
+      </div>
+      <button class="btn-secondary" onclick="openDashboard()" style="font-size:11px;padding:5px 10px">📊 NPS Dashboard</button>
+      <button class="btn-secondary" onclick="openGuild()" style="font-size:11px;padding:5px 10px;border-color:rgba(139,92,246,0.4);color:#a855f7">⚔️ Guild</button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MAIN SPLIT SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="main-split">
+
+    <!-- ── FUTURE SELF WORLD ─────────────────────────────── -->
+    <div class="world-panel" id="future-world">
+      <div class="world-label">✨ YOUR FUTURE SELF</div>
+
+      <!-- Stars -->
+      <div class="world-stars" id="future-stars"></div>
+
+      <!-- Environment -->
+      <div class="environment env-early" id="future-environment"></div>
+
+      <!-- Particles -->
+      <div id="future-particles"></div>
+
+      <!-- Avatar -->
+      <div class="avatar-container" id="future-avatar"></div>
+
+      <!-- World Stats -->
+      <div class="world-stats">
+        <div class="corpus-display" id="corpus-amount">₹0</div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">💪 Resilience</div>
+          <div class="mini-stat-bar">
+            <div class="mini-stat-fill" id="resilience-fill" style="width:100%"></div>
+          </div>
+          <div class="mini-stat-value" id="resilience-value">100%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CENTER HUD ────────────────────────────────────── -->
+    <div id="hud-center">
+
+      <!-- Divergence Score -->
+      <div class="hud-section">
+        <div class="hud-title">📡 Divergence Score</div>
+        <div class="divergence-gauge">
+          <div class="divergence-number" id="divergence-value">0</div>
+          <div class="divergence-label">SECURITY GAP</div>
+          <div class="divergence-bar">
+            <div id="divergence-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage -->
+      <div class="hud-section" style="padding:8px 16px;">
+        <div id="stage-label">🏠 Early Stage</div>
+      </div>
+
+      <!-- Contribution Slider -->
+      <div class="hud-section">
+        <div class="hud-title">💰 Monthly Contribution</div>
+        <div class="slider-container">
+          <div class="slider-header">
+            <span style="font-size:11px;color:rgba(255,255,255,0.5)">₹500</span>
+            <span class="slider-amount" id="slider-value">₹5,000</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.5)">₹50K</span>
+          </div>
+          <input type="range" id="contribution-slider" min="500" max="50000" step="500" value="5000">
+
+          <!-- Home Preview -->
+          <div class="home-preview preview-growth" id="home-preview">🏡</div>
+
+          <!-- Preview Cards -->
+          <div class="preview-grid">
+            <div class="preview-card">
+              <div class="preview-card-label">Retire At</div>
+              <div class="preview-card-value" id="projected-age">55</div>
+            </div>
+            <div class="preview-card">
+              <div class="preview-card-label">At 60 Years</div>
+              <div class="preview-card-value" id="projected-corpus">₹0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYNC Button -->
+      <div class="hud-section">
+        <button id="sync-btn" onclick="syncTimeline()">⚡ SYNC TIMELINE</button>
+        <div style="text-align:center;margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3)">
+          Month <span id="month-count">0</span> · Life Shock every 3 months
+        </div>
+      </div>
+
+      <!-- Resilience Comparison -->
+      <div class="hud-section">
+        <div class="hud-title">⚖️ Resilience Comparison</div>
+        <div style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px;">
+            <span>Future Self</span><span id="resilience-value-2">100%</span>
+          </div>
+          <div class="mini-stat-bar" style="height:8px;">
+            <div class="mini-stat-fill" id="resilience-fill-2" style="width:100%;background:linear-gradient(90deg,#2ecc71,#27ae60)"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px;">
+            <span>Shadow Twin</span><span id="shadow-resilience-value">100%</span>
+          </div>
+          <div class="mini-stat-bar" style="height:8px;">
+            <div class="mini-stat-fill" id="shadow-resilience-fill" style="width:100%;background:linear-gradient(90deg,#e74c3c,#c0392b)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-Games -->
+      <div class="hud-section">
+        <div class="hud-title">🎮 Mini-Games</div>
+        <div class="minigame-buttons">
+          <button class="btn-secondary" onclick="startInflationGame()" style="font-size:11px;">
+            🛡️ Inflation<br>Defense
+          </button>
+          <button class="btn-secondary" onclick="startAllocationGame()" style="font-size:11px;">
+            📊 Asset<br>Allocation
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── SHADOW TWIN WORLD ──────────────────────────────── -->
+    <div class="world-panel" id="shadow-world">
+      <div class="world-label">👻 SHADOW TWIN (No NPS)</div>
+
+      <!-- Stars (dim) -->
+      <div class="world-stars" id="shadow-stars"></div>
+
+      <!-- Environment -->
+      <div class="environment env-shadow" id="shadow-environment"></div>
+
+      <!-- Particles -->
+      <div id="shadow-particles"></div>
+
+      <!-- Avatar -->
+      <div class="avatar-container" id="shadow-avatar"></div>
+
+      <!-- World Stats -->
+      <div class="world-stats">
+        <div class="corpus-display" style="color:#e74c3c" id="shadow-corpus">₹0</div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">💔 Resilience</div>
+          <div class="mini-stat-bar">
+            <div class="mini-stat-fill" id="shadow-resilience-fill-world" style="width:100%;background:linear-gradient(90deg,#e74c3c,#c0392b)"></div>
+          </div>
+          <div class="mini-stat-value" id="shadow-resilience-value-world">100%</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end #main-split -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       BOTTOM BAR — Key Stats
+  ═══════════════════════════════════════════════════════ -->
+  <div id="bottom-bar">
+    <div class="bottom-stat">
+      <div class="bottom-stat-label">📅 Current Month</div>
+      <div class="bottom-stat-value" id="bottom-month">0</div>
+      <div class="bottom-stat-sub">of 360 total</div>
+    </div>
+    <div class="bottom-stat">
+      <div class="bottom-stat-label">💎 Total Saved</div>
+      <div class="bottom-stat-value" id="bottom-saved">₹0</div>
+      <div class="bottom-stat-sub">principal invested</div>
+    </div>
+    <div class="bottom-stat">
+      <div class="bottom-stat-label">📈 Corpus Growth</div>
+      <div class="bottom-stat-value" id="bottom-growth">0%</div>
+      <div class="bottom-stat-sub">returns on investment</div>
+    </div>
+    <div class="bottom-stat">
+      <div class="bottom-stat-label">🏆 Divergence Score</div>
+      <div class="bottom-stat-value" id="bottom-divergence" style="color:#f39c12">0</div>
+      <div class="bottom-stat-sub">vs Shadow Twin</div>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- ═══════════════════════════════════════════════════════
+     LIFE SHOCK MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="shock-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeShockModal()">✕</button>
+
+    <div class="shock-header">
+      <span class="shock-emoji" id="shock-icon">⚡</span>
+      <div class="shock-title-text" id="shock-title">Life Shock!</div>
+      <div class="shock-desc" id="shock-desc">A financial shock has occurred.</div>
+    </div>
+
+    <div class="shock-outcomes">
+      <div class="outcome-card outcome-future">
+        <div class="outcome-label">✨ Your Future Self</div>
+        <div class="outcome-value" id="shock-future-damage">Absorbing shock...</div>
+      </div>
+      <div class="outcome-card outcome-shadow">
+        <div class="outcome-label">👻 Shadow Twin</div>
+        <div class="outcome-value" id="shock-shadow-damage">Collapsing...</div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="shock-insight">
+      <h3>📚 NPS Insight</h3>
+      <p>Loading educational content...</p>
+    </div>
+
+    <div class="insight-timer-row">
+      <span>📖 Reading insight...</span>
+      <span id="insight-timer">30</span>
+      <span>seconds</span>
+    </div>
+
+    <button class="btn-primary" onclick="closeShockModal()" style="width:100%;margin-top:16px">
+      ✅ I Understand — Continue
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     EVOLUTION OVERLAY
+═══════════════════════════════════════════════════════ -->
+<div id="evolution-overlay">
+  <div style="font-size:80px;margin-bottom:16px;animation:shock-bounce 0.5s ease">🌟</div>
+  <div id="evolution-title">Stage Unlocked!</div>
+  <div id="evolution-desc">Your consistent contributions are paying off!</div>
+  <div style="margin-top:24px;font-size:12px;color:rgba(255,255,255,0.3)">Continuing in 3 seconds...</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MINI-GAME MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="minigame-modal">
+  <div class="modal-box" style="max-width:600px;">
+    <button class="modal-close" onclick="closeMinigame()">✕</button>
+
+    <div class="mg-header">
+      <div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--accent)" id="mg-title">Mini-Game</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px" id="mg-desc">Loading...</div>
+      </div>
+      <div class="mg-stats">
+        <div class="mg-stat">Score: <span id="mg-score">0</span></div>
+        <div class="mg-stat">Time: <span id="mg-timer">30</span>s</div>
+      </div>
+    </div>
+
+    <div id="mg-canvas-area" style="min-height:300px;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     GUILD & LEADERBOARD MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="guild-modal">
+  <div class="modal-box" style="max-width:600px;">
+    <button class="modal-close" onclick="closeGuild()">✕</button>
+
+    <div class="guild-header">
+      <span style="font-size:32px">⚔️</span>
+      <div>
+        <div class="guild-title">Retirement Warriors Guild</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">Anonymous leaderboard · Monthly challenge</div>
+      </div>
+    </div>
+
+    <!-- Guild Challenge Progress -->
+    <div class="guild-progress-container">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.6);">
+        <span>🎯 Guild Challenge: Collective ₹10L Corpus</span>
+        <span style="color:var(--purple)" id="guild-progress-text">₹0 / ₹10L</span>
+      </div>
+      <div class="guild-progress-bar">
+        <div id="guild-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Player</th>
+          <th>Divergence</th>
+          <th>Streak</th>
+          <th>Corpus</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     NPS DASHBOARD MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="dashboard-modal">
+  <div class="modal-box" style="max-width:560px;">
+    <button class="modal-close" onclick="closeDashboard()">✕</button>
+
+    <div style="font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--accent);margin-bottom:4px;">📊 NPS Dashboard</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px;">Your simulated NPS portfolio overview</div>
+
+    <div class="dashboard-grid">
+      <div class="dash-card">
+        <div class="dash-card-label">Tier I Holdings</div>
+        <div class="dash-card-value" id="dash-tier1">₹0</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-label">Tier II Holdings</div>
+        <div class="dash-card-value" id="dash-tier2">₹0</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-label">Total Corpus</div>
+        <div class="dash-card-value" id="dash-total" style="color:var(--accent2)">₹0</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-label">Projected at 60</div>
+        <div class="dash-card-value" id="dash-projected" style="color:var(--accent)">₹0</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-label">Monthly Contribution</div>
+        <div class="dash-card-value" id="dash-monthly">₹5,000</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-label">Tax Saved (30%)</div>
+        <div class="dash-card-value" id="dash-tax-saved" style="color:#2ecc71">₹0</div>
+      </div>
+    </div>
+
+    <div class="dash-card" style="margin-top:12px;">
+      <div class="dash-card-label">Expected Annual Return</div>
+      <div class="dash-card-value" id="dash-return" style="color:var(--accent)">10.2%</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px;">Based on your current allocation profile</div>
+    </div>
+
+    <button class="dash-connect-btn" onclick="showToast('🔗 NPS account linking coming soon! Use PRAN number to connect.', 'info')">
+      🔗 Connect Real NPS Account (PRAN)<br>
+      <span style="font-size:11px;opacity:0.6">Link your Tier I & II accounts for live data</span>
+    </button>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="assets/events.js"></script>
+<script src="assets/avatars.js"></script>
+<script src="game.js"></script>
+
+<script>
+// Generate stars
+function generateStars(containerId, count) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = `${Math.random() * 100}%`;
+    star.style.top = `${Math.random() * 100}%`;
+    star.style.animationDelay = `${Math.random() * 3}s`;
+    star.style.animationDuration = `${2 + Math.random() * 3}s`;
+    container.appendChild(star);
+  }
+}
+
+// Sync secondary UI elements not in main updateHUD
+const origUpdateHUD = typeof updateHUD !== 'undefined' ? updateHUD : null;
+document.addEventListener('DOMContentLoaded', () => {
+  generateStars('future-stars', 30);
+  generateStars('shadow-stars', 15);
+
+  // Patch updateHUD to also update bottom bar and secondary elements
+  const _origUpdate = window.updateHUD;
+  window.updateHUD = function() {
+    _origUpdate();
+    // Bottom bar
+    const bMonth = document.getElementById('bottom-month');
+    const bSaved = document.getElementById('bottom-saved');
+    const bGrowth = document.getElementById('bottom-growth');
+    const bDiv = document.getElementById('bottom-divergence');
+    if (bMonth) bMonth.textContent = state.month;
+    if (bSaved) bSaved.textContent = formatCurrency(state.totalSaved);
+    if (bGrowth) {
+      const growth = state.totalSaved > 0 ? ((state.totalCorpus - state.totalSaved) / state.totalSaved * 100) : 0;
+      bGrowth.textContent = `${Math.max(0, growth).toFixed(1)}%`;
+    }
+    if (bDiv) bDiv.textContent = state.divergenceScore;
+
+    // Secondary resilience bar in HUD
+    const rf2 = document.getElementById('resilience-fill-2');
+    const rv2 = document.getElementById('resilience-value-2');
+    if (rf2) { rf2.style.width = `${state.resilience}%`; rf2.style.background = resilienceColor(state.resilience); }
+    if (rv2) rv2.textContent = `${Math.round(state.resilience)}%`;
+
+    // Shadow world bottom stats
+    const swf = document.getElementById('shadow-resilience-fill-world');
+    const swv = document.getElementById('shadow-resilience-value-world');
+    if (swf) { swf.style.width = `${state.shadowResilience}%`; }
+    if (swv) swv.textContent = `${Math.round(state.shadowResilience)}%`;
+  };
+});
+</script>
+
+</body>
+</html>
